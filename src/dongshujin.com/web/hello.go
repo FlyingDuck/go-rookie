@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -23,9 +24,21 @@ func sayHello(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "Hello Bennett")
 }
 
+func login(writer http.ResponseWriter, request *http.Request) {
+	fmt.Println("Method: ", request.Method)
+	if "GET" == request.Method {
+		t, _ := template.ParseFiles("web/login.gtpl")
+		t.Execute(writer, nil)
+	} else {
+		fmt.Println("Username: ", request.Form["username"])
+		fmt.Println("Password: ", request.Form["password"])
+	}
+}
+
 func RegisterHandler() {
 	// 设置路由访问
 	http.HandleFunc("/say/hello", sayHello)
+	http.HandleFunc("/login", login)
 	// 设置监听端口
 	err := http.ListenAndServe(":9999", nil)
 	if err != nil {
