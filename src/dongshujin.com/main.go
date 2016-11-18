@@ -4,7 +4,8 @@ import (
 	"fmt"
 	//"dongshujin.com/leetcode"
 	//"dongshujin.com/rookie"
-	"dongshujin.com/web"
+	"dongshujin.com/algorithm"
+	//"dongshujin.com/web"
 )
 
 func main() {
@@ -16,9 +17,16 @@ func main() {
 	//rookie.GotoFunc()
 	//fmt.Println("**Rookie Completed**")
 
-	fmt.Println("**** Web Server ****")
+	//fmt.Println("**** Web Server ****")
+	//web.RegisterHandler()
+	//fmt.Println("**** End Web Server ****")
 
-	web.RegisterHandler()
+	fmt.Println("**** Algorithm ****")
 
-	fmt.Println("**** End Web Server ****")
+	array := []int{9, 1, 6, 2, 0, 3, 4}
+
+	algorithm.BubbleSorter(&array)
+
+	fmt.Println("**** End Algorithm ****")
+
 }
