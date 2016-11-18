@@ -23,9 +23,16 @@ func main() {
 
 	fmt.Println("**** Algorithm ****")
 
-	array := []int{9, 1, 6, 2, 0, 3, 4}
+	array1 := []int{9, 1, 6, 2, 0, 3, 4}
 
-	algorithm.BubbleSorter(&array)
+	fmt.Println("-*- BubbleSorter -*-")
+	algorithm.BubbleSorter(&array1)
+
+	fmt.Println("-*- QuickSorter -*-")
+	array2 := []int{10, 8, 3, 7, 9, 2, 0}
+	fmt.Println("QuickSorter Start ", array2)
+	algorithm.QuickSorter(&array2, 0, len(array2)-1)
+	fmt.Println("QuickSorter End ", array2)
 
 	fmt.Println("**** End Algorithm ****")
 
