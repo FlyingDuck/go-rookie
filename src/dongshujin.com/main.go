@@ -34,6 +34,10 @@ func main() {
 	algorithm.QuickSorter(&array2, 0, len(array2)-1)
 	fmt.Println("QuickSorter End ", array2)
 
+	fmt.Println("-*- DeepFirstSearch -*-")
+	fmt.Println("N Start")
+	algorithm.DeepFirstSearch(0)
+	fmt.Println("N End")
 	fmt.Println("**** End Algorithm ****")
 
 }
