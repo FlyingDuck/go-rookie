@@ -1,6 +1,6 @@
 ## Learning Golang & Algorithms From [LeetCode](https://leetcode.com/)
 
-NO. [1 Two Sum](https://leetcode.com/problems/two-sum/)
+NO. [1 Two Sum](https://leetcode.com/problems/two-sum/)  
 NO. [6 ZigZag Conversion](https://leetcode.com/problems/zigzag-conversion/)
 
 
@@ -95,6 +95,40 @@ var locations []int = make([]int, n) // N个位置
 
 ![结果](http://upload-images.jianshu.io/upload_images/1366868-5fc2c57a5e673a3c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+
+
+快速排序
+
+```
+func QuickSorter(array *[]int, start int, end int) {
+        if start > end {
+                return
+        }
+
+        pivot, head, tail := start, start, end
+
+        for head < tail {
+                // 移动尾指针 寻找小于基准值的数 （这里基准值选取的是头部数，所以先移动尾指针）
+                for (*array)[tail] >= (*array)[pivot] && head < tail {
+                        tail--
+                }
+                // 移动头指针 寻找大于基准值的数
+                for (*array)[head] <= (*array)[pivot] && head < tail {
+                        head++
+                }
+
+                if head < tail {
+                        (*array)[head], (*array)[tail] = (*array)[tail], (*array)[head]
+                } else {
+                        // 将基准值归位
+                        (*array)[pivot], (*array)[head] = (*array)[head], (*array)[pivot]
+                }
+        }
+
+        QuickSorter(array, start, head-1)
+        QuickSorter(array, head+1, end)
+}
+```
 
 
 
