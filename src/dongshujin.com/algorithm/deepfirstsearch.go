@@ -58,3 +58,65 @@ func DeepFirstSearch2(step int) {
 	}
 	return
 }
+
+var treasureMap = [5][4]int{
+	{0, 0, 1, 0},
+	{0, 0, 0, 0},
+	{0, 0, 1, 0},
+	{0, 1, 0, 0},
+	{0, 0, 0, 1},
+}
+
+//var locationMarks = [5][5]int{
+//	{1, 0, 0, 0},
+//	{0, 0, 0, 0},
+//	{0, 0, 0, 0},
+//	{0, 0, 0, 0},
+//	{0, 0, 0, 0},
+//}
+
+var locationMarks [5][4]int
+
+var dereoctions = [4][2]int{
+	{1, 0},  // 向右
+	{0, 1},  // 向下
+	{-1, 0}, // 向左
+	{0, -1}, // 向上
+}
+
+var minDistance int = 20
+var targetX, targetY int = 2, 3
+
+func DeepFirstSearch3(x, y, step int) {
+	locationMarks[y][x] = 1
+
+	if targetX == x && targetY == y {
+		if step < minDistance {
+			minDistance = step
+			fmt.Println("Now distance is ", minDistance)
+			for i := 0; i < 5; i++ {
+				fmt.Println(locationMarks[i])
+			}
+		}
+		return
+	}
+
+	for d := 0; d < 4; d++ { // 遍历下一步的方向
+		// 计算下一个坐标
+		tx := x + dereoctions[d][0]
+		ty := y + dereoctions[d][1]
+
+		// 查看是否越界
+		if tx < 0 || tx > 3 || ty < 0 || ty > 4 {
+			continue
+		}
+
+		// 查看下一个点是否是障碍物 或者 已经经过
+		if treasureMap[ty][tx] == 0 && locationMarks[ty][tx] == 0 {
+			//locationMarks[ty][tx] = 1
+			DeepFirstSearch3(tx, ty, step+1)
+			locationMarks[ty][tx] = 0
+		}
+	}
+	return
+}
