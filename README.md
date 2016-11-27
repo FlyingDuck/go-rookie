@@ -126,6 +126,69 @@ func DeepFirstSearch(step int) {
 
 ![结果](http://upload-images.jianshu.io/upload_images/1366868-5fc2c57a5e673a3c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+---
+
+### Floyd-Marshall最短路径
+
+
+![图](http://upload-images.jianshu.io/upload_images/1366868-cfd11dfb2c3259fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+在寻找任意两点间的最短路径时(A->B)，需要引入第三个点(C)，通过第三个点中转，看是否能够使 A->C->B 的距离小于 A->B 的距离。
+
+```
+// 999 表示两点之间不连通
+var theMap = [4][4]int{
+        {0, 2, 6, 4},
+        {999, 0, 3, 999},
+        {7, 999, 0, 1},
+        {5, 999, 12, 0},
+}
+
+func Floyd() {
+        fmt.Println("Floyd")
+
+        for point := 0; point < 4; point++ {
+                for i := 0; i < 4; i++ {
+                        for j := 0; j < 4; j++ {
+                                if theMap[i][j] > (theMap[i][point] + theMap[point][j]) {
+                                        theMap[i][j] = theMap[i][point] + theMap[point][j]
+                                }
+                        }
+                }
+                fmt.Println(" Cover point()", point, ") ", theMap)
+        }
+}
+
+```
+
+![结果](http://upload-images.jianshu.io/upload_images/1366868-6553fdf1fffc2066.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
