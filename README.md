@@ -441,6 +441,111 @@ func Dijkstra() {
 另外，我们考虑到在图中，边数M 通常是远小于N2的（这种图叫稀疏图，M相对较大的叫稠密图），我们可以考虑用另外一种表示方式来代替我们一直在用的 **邻接矩阵** —— **邻接表**
 
 
+---
+
+# 图的邻接表
+
+![图](http://upload-images.jianshu.io/upload_images/1366868-41b334d840b19bfa.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+上图中有4个顶点5条边：
+
+
+起始顶点 | 目标顶点 | 权值 |  边编号
+---------|----------|------|---------
+   A     |     B    |  9   |   1
+   D     |     C    |  8   |   2
+   A     |     B    |  5   |   3
+   B     |     D    |  6   |   4
+   A     |     C    |  7   |   5
+
+
+---
+
+## 邻接表
+
+这里用数组来实现邻接表：
+
+![邻接表](http://upload-images.jianshu.io/upload_images/1366868-b70c2a7c02768dfb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+- `U` `V` `W` : U[i]->V[i] 权值为 W[i], 边编号为 i;
+- `first`: first[i] 表示 i（A, B, C, D）号顶点的第一条边；
+- `next` : next[i] 表示 i（1，2，3，4，5）号边的下一条边；
+
+
+### 构建邻接表
+
+看图不说话
+
+![1.png](http://upload-images.jianshu.io/upload_images/1366868-e030d44df58bddb5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![2.png](http://upload-images.jianshu.io/upload_images/1366868-9ad8067d5335f904.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![3.png](http://upload-images.jianshu.io/upload_images/1366868-62e9222b79c2c75c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+![4.png](http://upload-images.jianshu.io/upload_images/1366868-90f80a9359509130.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![5.png](http://upload-images.jianshu.io/upload_images/1366868-a0ad8761db4e894f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+---
+
+```
+// 顶点编号：0，1，2，3 表示顶点 A，B，C，D
+// 边编号：0，1，2，3，4
+var u = [5]int{0, 3, 0, 1, 0}
+var v = [5]int{3, 2, 1, 3, 2}
+var w = [5]int{9, 8, 5, 6, 7}
+
+func AdjacencyList() ([4]int, [5]int) {
+
+        for i := 0; i < 5; i++ {
+                fmt.Println(u[i], " -> ", v[i], " ", w[i])
+        }
+
+        first := [4]int{-1, -1, -1, -1}
+        next := [5]int{-1, -1, -1, -1, -1}
+
+        fmt.Println("fisrt : ", first)
+        fmt.Println("next: ", next)
+        fmt.Println("-----------------------")
+
+        // 遍历5条边
+        for i := 0; i < 5; i++ {
+                next[i] = first[u[i]] // 将第i条边的下一条边设置为 u[i]号顶点的当前第一条边
+                first[u[i]] = i       // 将u[i]号顶点的第一条边设置为当前边
+        }
+
+        fmt.Println("first: ", first)
+        fmt.Println("next: ", next)
+
+        return first, next
+}
+
+
+```
+
+![结果](http://upload-images.jianshu.io/upload_images/1366868-52aa3ef75c6f3c7d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+--- 
+
+> 用**邻接表**存储图的空间复杂度是O(M) （M边数），查找的时间复杂度也 为O(M)
+
+
+遍历顶点的出边：
+
+```
+func TraverseEdge(point int, first [4]int, next [5]int) {
+        k := first[point]
+        for -1 != k {
+                fmt.Println(u[k], " -> ", v[k], " ", w[k])
+                k = next[k]
+        }
+}
+
+```
+
+
 
 
 
