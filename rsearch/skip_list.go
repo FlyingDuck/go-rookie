@@ -11,26 +11,26 @@ const (
 )
 
 //跳表节点结构体
-type skipListNode struct {
+type SkipListNode struct {
 	v        interface{}     //跳表保存的值
 	score    int             //用于排序的分值
 	level    int             //层高
-	forwards []*skipListNode //每层前进指针
+	forwards []*SkipListNode //每层前进指针
 }
 
 //新建跳表节点
-func newSkipListNode(v interface{}, score, level int) *skipListNode {
-	return &skipListNode{
+func newSkipListNode(v interface{}, score, level int) *SkipListNode {
+	return &SkipListNode{
 		v:        v,
 		score:    score,
-		forwards: make([]*skipListNode, level, level),
+		forwards: make([]*SkipListNode, level, level),
 		level:    level,
 	}
 }
 
 //跳表结构体
 type SkipList struct {
-	head   *skipListNode //跳表头结点
+	head   *SkipListNode //跳表头结点
 	level  int           //跳表当前层数
 	length int           //跳表长度
 }
@@ -53,7 +53,7 @@ func (sl *SkipList) Level() int {
 }
 
 //查找
-func (sl *SkipList) Find(v interface{}, score int) *skipListNode {
+func (sl *SkipList) Find(v interface{}, score int) *SkipListNode {
 	if nil == v || sl.length == 0 {
 		return nil
 	}
@@ -82,7 +82,7 @@ func (sl *SkipList) Insert(v interface{}, score int) int {
 	//查找插入位置
 	cur := sl.head
 	//记录每层的路径
-	update := [MAX_LEVEL]*skipListNode{}
+	update := [MAX_LEVEL]*SkipListNode{}
 	i := MAX_LEVEL - 1
 	for ; i >= 0; i-- {
 		for nil != cur.forwards[i] {
@@ -139,7 +139,7 @@ func (sl *SkipList) Delete(v interface{}, score int) int {
 	//查找前驱节点
 	cur := sl.head
 	//记录要删除节点的所有前驱节点
-	update := [MAX_LEVEL]*skipListNode{}
+	update := [MAX_LEVEL]*SkipListNode{}
 	for i := sl.level - 1; i >= 0; i-- {
 		update[i] = sl.head
 		for nil != cur.forwards[i] {
