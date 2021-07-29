@@ -1,5 +1,10 @@
 package rtree
 
+import (
+	"fmt"
+	"strings"
+)
+
 type MaxHeap struct {
 	array    []int64
 	capacity int // 容量
@@ -8,7 +13,7 @@ type MaxHeap struct {
 
 func NewMaxHeap(capacity int) *MaxHeap {
 	return &MaxHeap{
-		array:    make([]int64, 0, capacity),
+		array:    make([]int64, capacity, capacity),
 		size:     0,
 		capacity: capacity,
 	}
@@ -70,4 +75,12 @@ func (heap *MaxHeap) Pop() int64 {
 	}
 
 	return popVal
+}
+
+func (heap *MaxHeap) String() string {
+	var sb strings.Builder
+	for i := 0; i < heap.size; i++ {
+		sb.WriteString(fmt.Sprintf(" %d", heap.array[i]))
+	}
+	return sb.String()
 }
