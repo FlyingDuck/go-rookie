@@ -48,6 +48,10 @@ func TestDoCutSentenceLessThenMin(t *testing.T) {
 			"Seems there is no other way.",  []int32{6, 11},
 			"Seems there is no other way.", []int32{6, 11}, true, true,
 		},
+		{//other way
+			"Seems there is no other way.",  []int32{18, 27},
+			"Seems there is no other way.", []int32{18, 27}, true, true,
+		},
 		{//my
 			"What you said was exactly what was weighing on my mind before.", []int32{47, 49},
 			"What you said was exactly what was weighing on my mind before.", []int32{47, 49}, true, true,
@@ -67,6 +71,10 @@ func TestDoCutSentenceLessThenMin(t *testing.T) {
 		{//其他
 			"看起来 there is no 其他 way.",  []int32{16, 18},
 			"看起来 there is no 其他 way.", []int32{16, 18}, true, true,
+		},
+		{//there is
+			"看起来 there is no 其他 way.",  []int32{4, 12},
+			"看起来 there is no 其他 way.", []int32{4, 12}, true, true,
 		},
 	}
 
@@ -125,10 +133,55 @@ func TestDoCutSentenceMoreThenMin(t *testing.T) {
 			"We have a mentor-mentee program within our team, where a member who's been with the team for some time would act as a mentor, the go-to person, for a newcomer for the six-month probation period.",  []int32{43, 47},
 			"We have a mentor-mentee program within our team, where a member who's been with the", []int32{43, 47}, true, false,
 		},
+		{// within our team
+			"We have a mentor-mentee program within our team, where a member who's been with the team for some time would act as a mentor, the go-to person, for a newcomer for the six-month probation period.",  []int32{32, 47},
+			"We have a mentor-mentee program within our team, where a member who's been with the", []int32{32, 47}, true, false,
+		},
+		{// any system
+			"Other than those company-wide tools and events, does your team have any system that facilitates in-team communication and help?",  []int32{68, 78},
+			"and events, does your team have any system that facilitates in-team communication", []int32{32, 42}, false, true,
+		},
 	}
 	ctx := context.Background()
 	for i, c := range cases {
 		cuttedStc, cuttedHL, keepHead, keepTail := doCutSentence(ctx, c.sentence, c.hl, 80)
+		t.Logf("case-%d: %s, [%d, %d)", i, c.sentence, c.cuttedHL[0], c.cuttedHL[1])
+		t.Logf("cutted: %s, [%d, %d), (%t, %t)", cuttedStc, cuttedHL[0], cuttedHL[1], keepHead, keepTail)
+
+		if cuttedStc != c.cuttedSentence {
+			t.Fatalf("case-%d", i)
+		}
+		if cuttedHL[0] != c.cuttedHL[0] || cuttedHL[1] != c.cuttedHL[1] {
+			t.Fatalf("case-%d", i)
+		}
+		if keepHead != c.keepHead || keepTail != c.keepTail {
+			t.Fatalf("case-%d", i)
+		}
+		if runeStc, runeCuttedStc := []rune(c.sentence), []rune(cuttedStc); string(runeStc[c.hl[0]:c.hl[1]]) != string(runeCuttedStc[cuttedHL[0]:cuttedHL[1]]) {
+			t.Fatalf("case-%d", i)
+		} else {
+			t.Logf("<%s>, <%s>", string(runeStc[c.hl[0]:c.hl[1]]), string(runeCuttedStc[cuttedHL[0]:cuttedHL[1]]))
+		}
+	}
+}
+
+func TestDoCutSentenceMoreThenMin2(t *testing.T) {
+	cases := []struct{
+		sentence string
+		hl []int32
+
+		cuttedSentence string
+		cuttedHL []int32
+		keepHead, keepTail bool
+	}{
+		{// elite
+			"It was mentioned repeatedly in the feedback from the users in third- and fourth-tier cities that all they could find on our platform is videos featuring big city skylines and elite lifestyles.",  []int32{175, 180},
+			"feedback from the users in third- and fourth-tier cities that all they could find on our platform is videos featuring big city skylines and elite lifestyles.", []int32{140, 145}, false, true,
+		},
+	}
+	ctx := context.Background()
+	for i, c := range cases {
+		cuttedStc, cuttedHL, keepHead, keepTail := doCutSentence(ctx, c.sentence, c.hl, 150)
 		t.Logf("case-%d: %s, [%d, %d)", i, c.sentence, c.cuttedHL[0], c.cuttedHL[1])
 		t.Logf("cutted: %s, [%d, %d), (%t, %t)", cuttedStc, cuttedHL[0], cuttedHL[1], keepHead, keepTail)
 
@@ -301,3 +354,4 @@ func TestDoCutSentenceWithNonASCII(t *testing.T) {
 	}
 
 }
+

@@ -2,24 +2,28 @@ package main
 
 import (
 	"fmt"
-	"github.com/FlyingDuck/go-rookie/alg"
+	"github.com/FlyingDuck/go-rookie/rsearch"
+	"github.com/FlyingDuck/go-rookie/rsort"
 )
 
 func main() {
-	//q := alg.CutRod(alg.Prices, 4)
-	//q := alg.MemoCutRod(alg.Prices, 4)
-	//q := alg.BottomUpCutRod(alg.Prices, 4)
+	arr := []int64{9, 10, 4, 5, 11, 13, 15, 1, 4, 4, 4}
+	//rsort.BubbleSort(arr)
+	//rsort.InsertionSort(arr)
+	//rsort.SelectionSort(arr)
+	//rsort.MergeSort(arr)
+	rsort.QuickSort(arr)
 
-	r, sols := alg.ExtendedBottomUpCutRod(alg.Prices, 10)
-	fmt.Println(r)
-	fmt.Println(sols)
+	fmt.Println(arr)
 
-
-	//sentence := "“Other than 中国 is good"
-	//ascii, replaces := alg.ConvertSentence2ASCII(context.Background(), sentence)
-	//
-	//rStc := []rune(ascii)
-	//for idx, r := range replaces {
-	//
-	//}
+	//searchIdx := rsearch.BinarySearch(arr, 4)
+	//fmt.Println(searchIdx)
+	//searchFirstIdx := rsearch.BinarySearchFirst(arr, 4)
+	//fmt.Println(searchFirstIdx)
+	//searchLastIdx := rsearch.BinarySearchLast(arr, 4)
+	//fmt.Println(searchLastIdx)
+	//searchFGEIdx := rsearch.BinarySearchFirstGE(arr, 8)
+	//fmt.Println(searchFGEIdx)
+	searchLLEIdx := rsearch.BinarySearchLastLE(arr, 9)
+	fmt.Println(searchLLEIdx)
 }
