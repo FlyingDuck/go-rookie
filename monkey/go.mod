@@ -1,4 +1,4 @@
-module github.com/FlyingDuck/go-rookie
+module github.com/FlyingDuck/go-rookie/monkey
 
 go 1.20
 

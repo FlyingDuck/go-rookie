@@ -31,7 +31,7 @@ func login(writer http.ResponseWriter, request *http.Request) {
 	if "GET" == request.Method {
 		theDate := time.Date(2016, time.November, 10, 23, 0, 0, 0, time.UTC)
 		fmt.Printf("Date is : %s\n", theDate.Local())
-		t, _ := template.ParseFiles("src/dongshujin.com/web/login.gtpl")
+		t, _ := template.ParseFiles("src/dongshujin.com/httpd/login.gtpl")
 		t.Execute(writer, nil)
 	} else {
 		// Way NO.1
