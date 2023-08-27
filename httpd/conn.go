@@ -59,9 +59,11 @@ func (c *conn) serve() {
 	c.svr.Handler.ServeHTTP(resp, req)
 
 	// 清空缓冲区
-	if err := c.bufw.Flush(); err != nil {
+	if err := req.finish(); err != nil {
 		return
 	}
+
+
 }
 
 func (c *conn) readRequest() (*Request, error) {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -62,6 +63,54 @@ func (r *Request) parseCookie() {
 	}
 }
 
+func (r *Request) setupBody() {
+	if r.Method != "POST" {
+		r.Body = new(eofReader)
+		return
+	}
+	if r.chunked() {
+		r.Body = newChunkReader(r.conn.bufr)
+		r.fixExpectContinueReader()
+		return
+	}
+
+	contentLen, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 64)
+	if err != nil {
+		r.Body = new(eofReader)
+		return
+	}
+	r.Body = io.LimitReader(r.conn.bufr, contentLen)
+	r.fixExpectContinueReader()
+}
+
+func (r *Request) chunked() bool {
+	return r.Header.Get("Transfer-Encoding") == "chunked"
+}
+
+// 些客户端在发送完 http 首部之后，发送body数据前，会先通过发送Expect: 100-continue查询服务端是否希望接受body数据，
+// 服务端只有回复了HTTP/1.1 100 Continue客户端才会再次发送body。
+func (r *Request) fixExpectContinueReader() {
+	if r.Header.Get("Expect") != "100-continue" {
+		return
+	}
+	r.Body = &expectContinueReader{
+		r: r.Body,
+		w: r.conn.bufw,
+	}
+}
+
+// 如果用户在Handler的回调函数中没有去读取Body的数据，就意味着处理同一个 socket 连接上的下一个http报文时，
+// Body未消费的数据会干扰下一个http报文的解析。所以我们的框架还需要在 Handler 结束后，将当前http请求的数据给消费掉。
+func (r *Request) finish() error {
+	// 将缓存中的剩余的数据发送到 rwc 中
+	if err :=r.conn.bufw.Flush();err!=nil{
+		return err
+	}
+	// 消费掉剩余的数据
+	_,err := io.Copy(io.Discard,r.Body)
+	return err
+}
+
 // readRequest 解析 HTTP 报文，如下：
 // POST /index?name=gu HTTP/1.1\r\n			#请求行
 // Content-Type: text/plain\r\n				#此处至报文主体为首部字段
@@ -104,10 +153,7 @@ func readRequest(c *conn) (*Request, error) {
 
 	const noLimited = (1 << 63) - 1
 	r.conn.lr.N = noLimited
-	r.Body, err = setupBody(c.bufr)
-	if err != nil {
-		return nil, err
-	}
+	r.setupBody()
 	return r, nil
 }
 
@@ -172,13 +218,24 @@ func parseHeader(bufr *bufio.Reader) (Header, error) {
 	return header, nil
 }
 
-func setupBody(bufr *bufio.Reader) (io.Reader, error) {
-	return new(eofReader), nil
-}
-
 type eofReader struct {
 }
 
 func (r eofReader) Read([]byte) (int, error) {
 	return 0, io.EOF
+}
+
+type expectContinueReader struct {
+	wroteContinue bool // 是否已经发送过100 continue
+	r             io.Reader
+	w             *bufio.Writer
+}
+
+func (r *expectContinueReader) Read(p []byte) (n int, err error) {
+	if !r.wroteContinue { // 第一次读取前发送100 continue
+		r.w.WriteString("HTTP/1.1 100 Continue\r\n\r\n")
+		r.w.Flush()
+		r.wroteContinue = true
+	}
+	return r.r.Read(p)
 }
