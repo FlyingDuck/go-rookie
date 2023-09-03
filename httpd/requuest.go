@@ -24,6 +24,8 @@ type Request struct {
 	conn        *conn
 	cookies     map[string]string
 	queryString map[string]string
+	contentType string
+	boundary    string
 }
 
 func (r *Request) Query(key string) string {
@@ -99,15 +101,46 @@ func (r *Request) fixExpectContinueReader() {
 	}
 }
 
+// boundary是存取在Content-Type字段中
+func (r *Request) parseContentType() {
+	ct := r.Header.Get("Content-Type")
+	//Content-Type: multipart/form-data; boundary=------974767299852498929531610575
+	//Content-Type: multipart/form-data; boundary=""------974767299852498929531610575"
+	//Content-Type: application/x-www-form-urlencoded
+	index := strings.IndexByte(ct, ';')
+	if index == -1 {
+		r.contentType = ct
+		return
+	}
+	if index == len(ct)-1 {
+		return
+	}
+	ss := strings.Split(ct[index+1:], "=")
+	if len(ss) < 2 || strings.TrimSpace(ss[0]) != "boundary" {
+		return
+	}
+	// 将解析到的CT和boundary保存在Request中
+	r.contentType, r.boundary = ct[:index], strings.Trim(ss[1],`"`)
+	return
+}
+
+// 得到一个MultipartReader
+func (r *Request) MultipartReader()(*MultipartReader,error){
+	if r.boundary==""{
+		return nil,errors.New("no boundary detected")
+	}
+	return NewMultipartReader(r.Body,r.boundary),nil
+}
+
 // 如果用户在Handler的回调函数中没有去读取Body的数据，就意味着处理同一个 socket 连接上的下一个http报文时，
 // Body未消费的数据会干扰下一个http报文的解析。所以我们的框架还需要在 Handler 结束后，将当前http请求的数据给消费掉。
 func (r *Request) finish() error {
 	// 将缓存中的剩余的数据发送到 rwc 中
-	if err :=r.conn.bufw.Flush();err!=nil{
+	if err := r.conn.bufw.Flush(); err != nil {
 		return err
 	}
 	// 消费掉剩余的数据
-	_,err := io.Copy(io.Discard,r.Body)
+	_, err := io.Copy(io.Discard, r.Body)
 	return err
 }
 
@@ -154,6 +187,8 @@ func readRequest(c *conn) (*Request, error) {
 	const noLimited = (1 << 63) - 1
 	r.conn.lr.N = noLimited
 	r.setupBody()
+
+	r.parseContentType()
 	return r, nil
 }
 
