@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -21,11 +22,15 @@ type Request struct {
 	RequestURI string //字符串形式的url
 
 	//私有字段
-	conn        *conn
-	cookies     map[string]string
-	queryString map[string]string
-	contentType string
-	boundary    string
+	conn           *conn
+	cookies        map[string]string
+	queryString    map[string]string
+	contentType    string
+	boundary       string
+	postForm       map[string]string
+	multipartForm  *MultipartForm
+	haveParsedForm bool
+	parseFormErr   error
 }
 
 func (r *Request) Query(key string) string {
@@ -37,6 +42,18 @@ func (r *Request) Cookie(key string) string {
 		r.parseCookie()
 	}
 	return r.cookies[key]
+}
+
+func (r *Request) FormFile(key string)(fh* FileHeader,err error){
+	mf,err := r.MultipartForm()
+	if err!=nil{
+		return
+	}
+	fh,ok:=mf.File[key]
+	if !ok{
+		return nil,errors.New("http: missing multipart file")
+	}
+	return
 }
 
 func (r *Request) parseCookie() {
@@ -120,16 +137,16 @@ func (r *Request) parseContentType() {
 		return
 	}
 	// 将解析到的CT和boundary保存在Request中
-	r.contentType, r.boundary = ct[:index], strings.Trim(ss[1],`"`)
+	r.contentType, r.boundary = ct[:index], strings.Trim(ss[1], `"`)
 	return
 }
 
 // 得到一个MultipartReader
-func (r *Request) MultipartReader()(*MultipartReader,error){
-	if r.boundary==""{
-		return nil,errors.New("no boundary detected")
+func (r *Request) MultipartReader() (*MultipartReader, error) {
+	if r.boundary == "" {
+		return nil, errors.New("no boundary detected")
 	}
-	return NewMultipartReader(r.Body,r.boundary),nil
+	return NewMultipartReader(r.Body, r.boundary), nil
 }
 
 // 如果用户在Handler的回调函数中没有去读取Body的数据，就意味着处理同一个 socket 连接上的下一个http报文时，
@@ -141,6 +158,94 @@ func (r *Request) finish() error {
 	}
 	// 消费掉剩余的数据
 	_, err := io.Copy(io.Discard, r.Body)
+	return err
+}
+
+func (r *Request) PostForm(name string) string {
+	if !r.haveParsedForm {
+		r.parseFormErr = r.parseForm()
+	}
+	if r.parseFormErr != nil || r.postForm == nil {
+		return ""
+	}
+	return r.postForm[name]
+}
+
+func (r *Request) MultipartForm() (*MultipartForm, error) {
+	if !r.haveParsedForm {
+		if err := r.parseForm(); err != nil {
+			r.parseFormErr = err
+			return nil, err
+		}
+	}
+	return r.multipartForm, r.parseFormErr
+}
+
+func (r *Request) parseForm() error {
+	if r.Method != "POST" && r.Method != "PUT" {
+		return errors.New("missing form body")
+	}
+	r.haveParsedForm = true
+	switch r.contentType {
+	case "application/x-www-form-urlencoded":
+		return r.parsePostForm()
+	case "multipart/form-data":
+		return r.parseMultipartForm()
+	default:
+		return errors.New("unsupported form type")
+	}
+}
+
+func (r *Request) parsePostForm() error {
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	r.postForm = parseQuery(string(data))
+	return nil
+}
+
+func (r *Request) parseMultipartForm() (err error) {
+	mr,err := r.MultipartReader()
+	if err!=nil{
+		return
+	}
+	r.multipartForm,err = mr.ReadForm()
+	//让PostForm方法也可以访问multipart表单的文本数据
+	r.postForm = r.multipartForm.Value
+	return
+}
+
+func (r *Request) finishRequest(resp *Response) (err error) {
+	if r.multipartForm != nil {
+		r.multipartForm.RemoveAll()
+	}
+	//告诉chunkWriter handler已经结束
+	resp.handlerDone = true
+	//触发chunkWriter的Write方法，Write方法通过handlerDone来决定是用chunk还是Content-Length
+	if err = resp.bufw.Flush(); err != nil {
+		return
+	}
+	//如果是使用chunk编码，还需要将结束标识符传输
+	if resp.chunking{
+		_,err = resp.c.bufw.WriteString("0\r\n\r\n")
+		if err!=nil{
+			return
+		}
+	}
+
+	//如果用户的handler中未Write任何数据，我们手动触发(*chunkWriter).writeHeader
+	if !resp.cw.wrote {
+		resp.header.Set("Content-Length", "0")
+		if err = resp.cw.writeHeader(); err != nil {
+			return
+		}
+	}
+
+	if err = r.conn.bufw.Flush(); err != nil {
+		return
+	}
+	_, err = io.Copy(io.Discard, r.Body)
 	return err
 }
 
@@ -175,10 +280,7 @@ func readRequest(c *conn) (*Request, error) {
 		return nil, err
 	}
 
-	r.queryString, err = parseQuery(r.URL.RawQuery)
-	if err != nil {
-		return nil, err
-	}
+	r.queryString = parseQuery(r.URL.RawQuery)
 	r.Header, err = parseHeader(c.bufr)
 	if err != nil {
 		return nil, err
@@ -210,7 +312,7 @@ func readLine(bufr *bufio.Reader) ([]byte, error) {
 	return lineBuf.Bytes(), nil
 }
 
-func parseQuery(rawQuery string) (map[string]string, error) {
+func parseQuery(rawQuery string) (map[string]string) {
 	parts := strings.Split(rawQuery, "&")
 	queries := make(map[string]string, len(parts))
 
@@ -223,7 +325,7 @@ func parseQuery(rawQuery string) (map[string]string, error) {
 		value := strings.TrimSpace(part[index+1:])
 		queries[key] = value
 	}
-	return queries, nil
+	return queries
 }
 
 func parseHeader(bufr *bufio.Reader) (Header, error) {
@@ -273,4 +375,48 @@ func (r *expectContinueReader) Read(p []byte) (n int, err error) {
 		r.wroteContinue = true
 	}
 	return r.r.Read(p)
+}
+
+
+type MultipartForm struct {
+	Value map[string]string
+	File  map[string]*FileHeader
+}
+
+type FileHeader struct {
+	Filename string
+	Header   Header
+	Size     int
+	content  []byte
+	tmpFile  string
+}
+
+func (fh *FileHeader) Open() (io.ReadCloser, error) {
+	if fh.inDisk() {
+		return os.Open(fh.tmpFile)
+	}
+	b := bytes.NewReader(fh.content)
+	return io.NopCloser(b), nil
+}
+
+func (fh *FileHeader) inDisk() bool {
+	return fh.tmpFile != ""
+}
+
+func (fh *FileHeader) Save(dest string)(err error){
+	rc,err:=fh.Open()
+	if err!=nil{
+		return
+	}
+	defer rc.Close()
+	file,err:=os.Create(dest)
+	if err!=nil{
+		return
+	}
+	defer file.Close()
+	_,err = io.Copy(file,rc)
+	if err!=nil{
+		os.Remove(dest)
+	}
+	return
 }
