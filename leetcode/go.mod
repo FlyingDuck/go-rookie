@@ -1,3 +1,3 @@
 module github.com/FlyingDuck/go-rookie/leetcode
 
-go 1.20
+go 1.21
