@@ -7,6 +7,6 @@ import (
 
 func TestQuestion1(t *testing.T) {
 
-	result := stepBack2Zero(10, 4)
+	result := stepBack2Zero(10, 6)
 	fmt.Println(result)
 }
