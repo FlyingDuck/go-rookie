@@ -13,3 +13,9 @@ func MaxIntEnhanced(num1, num2 int) (max int, first bool) {
 	}
 	return num2, false
 }
+
+func swap(nums []int, i, j int) {
+	tmp := nums[i]
+	nums[i] = nums[j]
+	nums[j] = tmp
+}
