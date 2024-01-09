@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 /*
 146. LRU 缓存
 请你设计并实现一个满足  LRU (最近最少使用) 缓存 约束的数据结构。
@@ -30,22 +32,104 @@ lRUCache.get(3);    // 返回 3
 lRUCache.get(4);    // 返回 4
 */
 func main() {
+	lru := Constructor(2)
+	lru.Put(2, 1)
+	lru.Put(1, 1)
+	lru.Put(2, 3)
+	lru.Put(4, 1)
+	fmt.Println(lru.cache)
 
+	//getRet := lru.Get(1)
+	//fmt.Println(getRet)
+
+	//getRet := lru.Get(2)
+	//fmt.Println(getRet)
+
+	//lru.Put(4, 1)
+	//fmt.Println(lru.cache)
+
+	//getRet = lru.Get(1)
+	//fmt.Println(getRet)
 }
 
 type LRUCache struct {
+	capacity   int
+	cache      map[int]*Node
+	head, tail *Node
 }
 
 func Constructor(capacity int) LRUCache {
-
+	cache := make(map[int]*Node)
+	head := &Node{}
+	tail := &Node{}
+	head.next = tail
+	tail.prev = head
+	return LRUCache{
+		capacity: capacity,
+		cache:    cache,
+		head:     head,
+		tail:     tail,
+	}
 }
 
 func (this *LRUCache) Get(key int) int {
-
+	node := this.cache[key]
+	if node == nil {
+		return -1
+	}
+	this.afterAccess(node)
+	return node.val
 }
 
 func (this *LRUCache) Put(key int, value int) {
+	node := this.cache[key]
+	if node != nil {
+		node.val = value
+		this.afterAccess(node)
+		return
+	}
 
+	if len(this.cache) >= this.capacity {
+		delKey := this.tail.prev.key
+
+		this.tail.prev = this.tail.prev.prev
+		this.tail.prev.next = this.tail
+
+		delete(this.cache, delKey)
+	}
+	node = &Node{
+		key:  key,
+		val:  value,
+		next: nil,
+		prev: nil,
+	}
+
+	this.head.next.prev = node
+	node.next = this.head.next
+	this.head.next = node
+	node.prev = this.head
+
+	this.cache[node.key] = node
+}
+
+func (this *LRUCache) afterAccess(node *Node) {
+	node.prev.next = node.next
+	node.next.prev = node.prev
+
+	node.next = this.head.next
+	this.head.next.prev = node
+	this.head.next = node
+	node.prev = this.head
+}
+
+type Node struct {
+	key        int
+	val        int
+	next, prev *Node
+}
+
+func (n *Node) String() string {
+	return fmt.Sprintf("(%d, %d)", n.key, n.val)
 }
 
 /**
