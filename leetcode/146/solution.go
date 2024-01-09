@@ -1,88 +1,56 @@
 package main
 
-import (
-	"fmt"
-)
-
 /*
-给定一个二维数组 array，请返回「螺旋遍历」该数组的结果。
-螺旋遍历：从左上角开始，按照 向右、向下、向左、向上 的顺序 依次 提取元素，然后再进入内部一层重复相同的步骤，直到提取完所有元素。
+146. LRU 缓存
+请你设计并实现一个满足  LRU (最近最少使用) 缓存 约束的数据结构。
+实现 LRUCache 类：
+LRUCache(int capacity) 以 正整数 作为容量 capacity 初始化 LRU 缓存
+int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。
+void put(int key, int value) 如果关键字 key 已经存在，则变更其数据值 value ；如果不存在，则向缓存中插入该组 key-value 。如果插入操作导致关键字数量超过 capacity ，则应该 逐出 最久未使用的关键字。
+函数 get 和 put 必须以 O(1) 的平均时间复杂度运行。
 
-示例 1：
-输入：array = [
+示例：
 
-	[1,2,3],
-	[8,9,4],
-	[7,6,5]
+输入
+["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]
+[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]
+输出
+[null, null, null, 1, null, -1, null, -1, 3, 4]
 
-]
-输出：[1,2,3,4,5,6,7,8,9]
-
-示例 2：
-输入：array  = [
-
-	[1,2,3,4],
-	[12,13,14,5],
-	[11,16,15,6],
-	[10,9,8,7]
-
-]
-输出：[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+解释
+LRUCache lRUCache = new LRUCache(2);
+lRUCache.put(1, 1); // 缓存是 {1=1}
+lRUCache.put(2, 2); // 缓存是 {1=1, 2=2}
+lRUCache.get(1);    // 返回 1
+lRUCache.put(3, 3); // 该操作会使得关键字 2 作废，缓存是 {1=1, 3=3}
+lRUCache.get(2);    // 返回 -1 (未找到)
+lRUCache.put(4, 4); // 该操作会使得关键字 1 作废，缓存是 {4=4, 3=3}
+lRUCache.get(1);    // 返回 -1 (未找到)
+lRUCache.get(3);    // 返回 3
+lRUCache.get(4);    // 返回 4
 */
 func main() {
-	array := [][]int{
-		{1, 2, 3},
-		{8, 9, 4},
-		{7, 6, 5},
-	}
-	result := spiralArray(array)
-	fmt.Println(array, result)
 
 }
 
-func spiralArray(array [][]int) []int {
-	if len(array) < 1 {
-		return nil
-	}
-
-	top := 0
-	bottom := len(array) - 1
-	left := 0
-	right := len(array[0]) - 1
-
-	result := make([]int, 0)
-	for {
-		for i := left; i <= right; i++ {
-			result = append(result, array[top][i])
-		}
-		top++
-		if top > bottom {
-			break
-		}
-		for i := top; i <= bottom; i++ {
-			result = append(result, array[i][right])
-		}
-		right--
-		if left > right {
-			break
-		}
-
-		for i := right; i >= left; i-- {
-			result = append(result, array[bottom][i])
-		}
-		bottom--
-		if top > bottom {
-			break
-		}
-
-		for i := bottom; i >= top; i-- {
-			result = append(result, array[i][left])
-		}
-		left++
-		if left > right {
-			break
-		}
-	}
-
-	return result
+type LRUCache struct {
 }
+
+func Constructor(capacity int) LRUCache {
+
+}
+
+func (this *LRUCache) Get(key int) int {
+
+}
+
+func (this *LRUCache) Put(key int, value int) {
+
+}
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * obj := Constructor(capacity);
+ * param_1 := obj.Get(key);
+ * obj.Put(key,value);
+ */
