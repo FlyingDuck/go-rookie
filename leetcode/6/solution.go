@@ -14,13 +14,21 @@ Y   I   R
 之后，你的输出需要从左往右逐行读取，产生出一个新的字符串，比如："PAHNAPLSIIGYIR"。
 */
 func main() {
-	s := "PAYPALISHIRING"
-	numRows := 3
+	//s := "PAYPALISHIRING"
+	//numRows := 3
+	//result := convert(s, numRows)
+	//fmt.Println(result)
+
+	s := "AB"
+	numRows := 1
 	result := convert(s, numRows)
 	fmt.Println(result)
 }
 
 func convert(s string, numRows int) string {
+	if numRows <= 1 {
+		return s
+	}
 	rows := make([][]byte, numRows)
 	for i := 0; i < len(rows); i++ {
 		rows[i] = make([]byte, 0)
