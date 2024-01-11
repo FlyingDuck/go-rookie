@@ -17,7 +17,7 @@ import "fmt"
 输出: 4
 */
 func main() {
-	nums := []int{3, 2, 1, 5, 6, 4}
+	nums := []int{3, 2, 1, 5, 6, 4, 7}
 	k := 2
 	result := findKthLargest(nums, k)
 	fmt.Println(result)
@@ -38,21 +38,22 @@ func findKthLargest(nums []int, k int) int {
 	}
 }
 
-func swap(nums []int, i, j int) {
-	tmp := nums[i]
-	nums[i] = nums[j]
-	nums[j] = tmp
-}
+//func swap(nums []int, i, j int) {
+//	tmp := nums[i]
+//	nums[i] = nums[j]
+//	nums[j] = tmp
+//}
 
 func partition(nums []int, startIdx, endIdx int) (idx int) {
-	pivot := startIdx
-	idx = pivot + 1
-	for i := idx; i <= endIdx; i++ {
-		if nums[i] > nums[pivot] {
-			swap(nums, idx, i)
-			idx++
+	pivot := startIdx - 1
+	pivotVal := nums[endIdx]
+	for i := startIdx; i < endIdx; i++ {
+		if nums[i] > pivotVal {
+			pivot++
+			nums[i], nums[pivot] = nums[pivot], nums[i]
 		}
 	}
-	swap(nums, pivot, idx-1)
-	return idx - 1
+
+	nums[pivot+1], nums[endIdx] = nums[endIdx], nums[pivot+1]
+	return pivot + 1
 }
